@@ -1,11 +1,13 @@
-from http import HTTPStatus
-import telegram
-import time
 import logging
 import os
 import sys
+import time
+from http import HTTPStatus
+
 import requests
+import telegram
 from dotenv import load_dotenv
+
 from exceptions import MessageError, StatusCodeError
 
 load_dotenv()
@@ -37,8 +39,7 @@ HOMEWORK_VERDICTS = {
 
 
 def check_tokens():
-    """Проверяет доступность переменных окружения,
-    которые необходимы для работы программы."""
+    """Проверяет доступность переменных окружения."""
     ENV_VARIABLES = [PRACTICUM_TOKEN, TELEGRAM_TOKEN, TELEGRAM_CHAT_ID]
     for var in ENV_VARIABLES:
         if var is None:
