@@ -4,6 +4,7 @@ import sys
 import time
 from http import HTTPStatus
 
+import json
 import requests
 import telegram
 from dotenv import load_dotenv
@@ -57,6 +58,9 @@ def send_message(bot, message):
         logger.debug(f'сообщение {message} отправлено в чат.')
     except Exception as error:
         logger.error(f'Ошибка при отправке сообщения{message}: {error}.')
+    except telegram.error.TelegramError as e:
+        f'Сбой в работе: {e}'
+        logger.error(f'Сбой в работе: {e}')
 
 
 def get_api_answer(timestamp):
@@ -69,36 +73,41 @@ def get_api_answer(timestamp):
                                   f'{response.status_code}.')
         return response.json()
     except requests.exceptions.RequestException as error:
-        logger.error(f'API {ENDPOINT} недоступен! Ошибка: {error}.')
+        f'API {ENDPOINT} недоступен! Ошибка: {error}.'
+
+    except json.decoder.JSONDecodeError as e:
+        f'Объект не преобразовался в json. {e}'
 
 
 def check_response(response):
     """Проверяет ответ API на соответствие документации."""
     if not isinstance(response, dict):
-        logger.error(f'Тип данных {response} не соответствует документации.')
-        raise TypeError
+        raise TypeError(f'Тип данных {response}'
+                        f'не соответствует документации.')
     for key in ['homeworks', 'current_date']:
         if key not in response:
-            logger.error(f'Oтсутствует ожидаемый ключ {key} в ответе API.')
-            raise KeyError
+            raise KeyError(f'Oтсутствует ожидаемый ключ {key} в ответе API.')
+
     homework = response.get('homeworks')
+
     if not isinstance(homework, list):
-        logger.error(f'Тип данных {homework} не соответствует документации.')
-        raise TypeError
+        raise TypeError(f'Тип данных {homework}'
+                        f'не соответствует документации.')
     return homework
 
 
 def parse_status(homework):
     """Получает информацию о статусе работы."""
     if 'homework_name' not in homework:
-        raise KeyError
+        raise KeyError(f'Ключ "homework_name" отсутсвует в {homework}')
+
     homework_name = homework.get('homework_name')
     homework_status = homework.get('status')
+
     if homework_status in HOMEWORK_VERDICTS:
         verdict = HOMEWORK_VERDICTS[homework_status]
         return f'Изменился статус проверки работы "{homework_name}". {verdict}'
-    logger.error(f'Неожиданный статус домашней работы: {homework_status}')
-    raise KeyError
+    raise KeyError(f'Неожиданный статус домашней работы: {homework_status}')
 
 
 def main():
@@ -113,11 +122,15 @@ def main():
         try:
             response = get_api_answer(timestamp)
             homework = check_response(response)
+
             if len(homework) > 0:
                 send_message(bot, parse_status(homework[0]))
+                logger.error('Неожиданный статус домашней работы')
+
             send_message(bot, 'Работу не взяли на проверку')
 
         except Exception as error:
+            timestamp = response.get('current_date', timestamp)
             message = f'Сбой в работе программы: {error}'
             logger.error(message)
             send_message(bot, message)

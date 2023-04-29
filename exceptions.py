@@ -1,4 +1,4 @@
 class StatusCodeError(Exception):
-    """Использутся при стасту коде отлтчном от HTTPStatus.OK."""
+    """Использутся при статусе кода отлтчном от HTTPStatus.OK."""
 
     pass
