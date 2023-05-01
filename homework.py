@@ -56,27 +56,26 @@ def send_message(bot, message):
     try:
         bot.send_message(TELEGRAM_CHAT_ID, message)
         logger.debug(f'сообщение {message} отправлено в чат.')
+    except telegram.error.TelegramError as e:
+        logger.error(f'Сбой в работе: {e}')
     except Exception as error:
         logger.error(f'Ошибка при отправке сообщения{message}: {error}.')
-    except telegram.error.TelegramError as e:
-        f'Сбой в работе: {e}'
-        logger.error(f'Сбой в работе: {e}')
 
 
 def get_api_answer(timestamp):
     """Делает запрос к единственному эндпоинту API-сервиса."""
-    params = {'from_date': timestamp}
     try:
+        params = {'from_date': timestamp}
         response = requests.get(ENDPOINT, headers=HEADERS, params=params)
         if response.status_code != HTTPStatus.OK:
             raise StatusCodeError(f'Неожиданный статус код:'
                                   f'{response.status_code}.')
-        return response.json()
     except requests.exceptions.RequestException as error:
-        f'API {ENDPOINT} недоступен! Ошибка: {error}.'
+        raise error(f'API {ENDPOINT} недоступен! Ошибка: {error}.')
 
-    except json.decoder.JSONDecodeError as e:
-        f'Объект не преобразовался в json. {e}'
+    except json.decoder.JSONDecodeError as error:
+        raise error(f'Объект не преобразовался в json. {error}.')
+    return response.json()
 
 
 def check_response(response):
@@ -127,10 +126,9 @@ def main():
                 send_message(bot, parse_status(homework[0]))
                 logger.error('Неожиданный статус домашней работы')
 
-            send_message(bot, 'Работу не взяли на проверку')
+            timestamp = response.get('current_date', timestamp)
 
         except Exception as error:
-            timestamp = response.get('current_date', timestamp)
             message = f'Сбой в работе программы: {error}'
             logger.error(message)
             send_message(bot, message)
