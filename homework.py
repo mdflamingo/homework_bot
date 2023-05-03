@@ -9,7 +9,7 @@ import requests
 import telegram
 from dotenv import load_dotenv
 
-from exceptions import StatusCodeError
+from exceptions import StatusCodeError, APIRequestError, JsonError
 
 load_dotenv()
 
@@ -64,18 +64,19 @@ def send_message(bot, message):
 
 def get_api_answer(timestamp):
     """Делает запрос к единственному эндпоинту API-сервиса."""
+    params = {'from_date': timestamp}
+
     try:
-        params = {'from_date': timestamp}
         response = requests.get(ENDPOINT, headers=HEADERS, params=params)
         if response.status_code != HTTPStatus.OK:
             raise StatusCodeError(f'Неожиданный статус код:'
                                   f'{response.status_code}.')
-    except requests.exceptions.RequestException as error:
-        raise error(f'API {ENDPOINT} недоступен! Ошибка: {error}.')
+        return response.json()
 
     except json.decoder.JSONDecodeError as error:
-        raise error(f'Объект не преобразовался в json. {error}.')
-    return response.json()
+        raise JsonError(f'Объект не преобразовался из json. {error}.')
+    except requests.exceptions.RequestException as error:
+        raise APIRequestError(f'API {ENDPOINT} недоступен! Ошибка: {error}.')
 
 
 def check_response(response):
