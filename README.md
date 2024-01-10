@@ -20,9 +20,7 @@
 
 ```git clone https://github.com/mdflamingo/homework_bot.git```
 
-- Перейти в папку с проектом:
-
-```cd homework_bot/```
+- Перейти в папку с проектом.
 
 - Установить виртуальное окружение для проекта:
 
@@ -44,15 +42,13 @@
 
 - Выполнить миграции на уровне проекта:
 
-```cd yatube```
-
 ```python3 manage.py makemigrations```
 
 ```python3 manage.py migrate```
 
 - Зарегистрировать чат-бота в Телеграм
 
-- Создать в корневой директории файл .env для хранения переменных окружения
+- Создать в корневой директории файл .env для хранения переменных окружения:
 
   PRAKTIKUM_TOKEN = 'xxx'
   
@@ -63,10 +59,10 @@
 - Запустить проект локально:
 
 для OS Lunix и MacOS
-```python homework_bot.py```
+```python homework.py```
 
 для OS Windows
-```python3 homework_bot.py```
+```python3 homework.py```
 
 ## Автор 
 Анастасия Вольнова
